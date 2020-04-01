@@ -1,0 +1,176 @@
+﻿@model HousekeepingBookModel
+@using PagedList
+@using PagedList.Mvc
+@using System.Globalization;
+@using BookModel;
+
+@using HousekeepingBook.Models
+
+@{
+    ViewBag.Title = "Home Page";
+    var nr = @Model.itemList.Count;
+    var list = @Model.itemList;
+}
+
+
+<ul>
+    <li><a href="#tabs-1">Transactions</a></li>
+    <li><a href="#tabs-2">Savings</a></li>
+    <li><a href="#tabs-3">Items</a></li>
+    <li><a href="#tabs-4">Categories</a></li>
+    <li><a href="#tabs-5">Errors</a></li>
+    <li><a href="#tabs-6">Unknown</a></li>
+    <li><a href="#tabs-7">Graph</a></li>
+</ul>
+
+<div id="tabs-1" style="width :800px; height:300px; overflow:auto; padding: 0px 0px">
+    <table class="table table-bordered tableFixHead">
+        <thead>
+            <tr>
+                <th>Omschrijving</th>
+                <th>Bij/af</th>
+                <th>Bedrag</th>
+                <th>Item</th>
+                <th>Category</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.transactionList)
+            {
+                <tr>
+                    <th scope="row" data-toggle="tooltip" data-placement="top" data-container="body" title="@item.ToolTip">@item.Naam_Omschrijving</th>
+                    <td>@item.Af_Bij</td>
+                    <td>@item.Bedrag</td>
+                    <td>@item.Item.ItemName</td>
+                    <td>@item.Item.CategoryStr</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="tabs-2">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product ID</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.sumList)
+            {
+                <tr>
+                    <th scope="row">@item.Column1</th>
+                    <td>@item.Column2</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <br />
+    Page @(Model.sumList.PageCount < Model.sumList.PageNumber ? 0 : Model.sumList.PageNumber) of @Model.sumList.PageCount
+    @Html.PagedListPager(Model.sumList, page2 => Url.Action("Index", new { currentFilter = ViewBag.CurrentFilter, page2 }))
+</div>
+
+<div id="tabs-3" style="width :800px; height:300px; overflow:auto">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Total</th>
+                <th>CategoryId</th>
+                <th>Category</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @for (int i = 0; i < nr; i++)
+            {
+                Model.PartialItemId = i;
+                Model.PartialItem = list[i];
+                @Html.Partial("TableRow", Model)
+                <!--
+                <th scope="row">@Model.itemList[i].ItemName</th>
+                <td>@Model.itemList[i].Total.ToString("N", new CultureInfo("is-IS"))</td>
+                <td>@Model.itemList[i].CategoryId</td>
+                <td>@Html.DropDownListFor(x => x.itemList[i].CategoryId, this.Model.categorySelectList, new { style = "width:100px" })</td>
+                -->
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="tabs-4" style="width :800px; height:300px; overflow:auto; padding: 0px 0px">
+    <table class="table table-bordered tableFixHead">
+        <thead>
+            <tr>
+                <th>CategoryId</th>
+                <th>Category</th>
+                <th>Total</th>
+                <th>Total Bij</th>
+                <th>Total Af</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in Model.categoryList)
+            {
+                <tr>
+                    <th scope="row">@category.CategoryId</th>
+                    <td>@category.CategoryStr</td>
+                    <td align="right">@category.Total.FormatDouble()</td>
+                    <td align="right">@category.TotalBij.ToString("N", new CultureInfo("is-IS"))</td>
+                    <td align="right">@category.TotalAf.ToString("N", new CultureInfo("is-IS"))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="tabs-5" style="width :600px; height:300px; overflow:auto">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Error message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.errorList)
+            {
+                <tr>
+                    <th scope="row">@item</th>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="tabs-6" style="width :800px; height:300px; overflow:auto">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Omschrijving</th>
+                <th>Bij/af</th>
+                <th>Bedrag</th>
+                <th>Item</th>
+                <th>Category</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.unknownList)
+            {
+                <tr>
+                    <th scope="row" data-toggle="tooltip" data-placement="top" data-container="body" title="@item.ToolTip">@item.Naam_Omschrijving</th>
+                    <td>@item.Af_Bij</td>
+                    <td>@item.Bedrag</td>
+                    <td>@item.Item.ItemName</td>
+                    <td>@item.Item.CategoryStr</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="tabs-7">
+    <canvas class="my-4 w-100 chartjs-render-monitor" id="myChart" width="824" height="347" style="display: block; width: 824px; height: 347px;"></canvas>
+</div>
+

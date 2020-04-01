@@ -1,0 +1,199 @@
+﻿@using HousekeepingBook.Models
+@using PagedList
+@using PagedList.Mvc
+@using System.Globalization;
+@using BookModel;
+
+@model HousekeepingBookModel
+
+@{
+    ViewBag.Title = "Home Page";
+    var nr = @Model.itemList.Count;
+    var list = @Model.itemList;
+}
+
+<div id="loading"></div>
+
+<div class="jumbotron">
+    <h1>Housekeeping Book</h1>
+</div>
+<div>
+    <p>@Model.transactionsFile</p>
+</div>
+
+<div class="row" onbeforeunload="myForm">
+    <div class="col-sm-6">
+        @using (Html.BeginForm("Upload", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            <input type="file" name="file" />
+            <input type="submit" value="OK" />
+        }
+        @using (Html.BeginForm("SaveMutations", "Home", FormMethod.Post))
+        {
+            <input type="submit" value="SaveMutations" />
+        }
+    </div>
+    <div class="col-sm-4">
+        @using (Html.BeginForm("Search", "Home", FormMethod.Post))
+        {
+            <p>
+                Find by name: <input type="text" name="currentFilter" />
+                <input type="submit" value="Search" />
+            </p>
+            <p>
+                Find by category: @Html.DropDownListFor(x => x.CategoryId, this.Model.categorySelectList, new { style = "width:100px" })
+                <input type="submit" value="Search" />
+            </p>
+        }
+    </div>
+    <div class="col-sm-2">
+        @using (Html.BeginForm("ResetFilters", "Home", FormMethod.Post))
+        {
+            <input type="submit" value="Reset" onsubmit="setFormSubmitting()" />
+        }
+        @using (Html.BeginForm("ResetYear", "Home", FormMethod.Post, new AjaxOptions { OnBegin = "StartSpinner" } ))
+        {
+            <select class="form-control" name="Year" id="submitid" onchange="submit();">
+                <option>Jaar</option>
+                <option>2014</option>
+                <option>2015</option>
+                <option>2016</option>
+                <option>2017</option>
+                <option>2018</option>
+            </select>
+        }
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div id="tabs" style="display:none;">
+
+            @{
+                Html.RenderPartial("DisplayTable", Model);
+            }
+
+        </div>
+    </div>
+</div>
+
+
+
+@section scripts
+{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script>
+
+        StartSpinner();
+
+        $(document).ready(function () {
+            $(function () {
+                $("#tabs").tabs();
+                $('#tabs').show();
+            });
+        });
+
+        function StartSpinner() {
+            $('#loading').show();
+        }
+
+        function hideLoader() {
+            $('#loading').hide();
+        }
+
+        $(window).ready(hideLoader);
+
+        // Strongly recommended: Hide loader after 20 seconds, even if the page hasn't finished loading
+        setTimeout(hideLoader, 20 * 1000);
+
+        var url = '@Url.Action("DisplayTable", "Home")';
+        $('#submitid').change(function(e){
+            e.preventDefault();
+            StartSpinner();
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: "Year=" + $('#submit').val(),
+            }).done(function (r) {
+        //       $('#tabs').html(r);
+            }).fail(function (e) {
+                console.log(e.responseText);
+            });
+        });
+
+        function SaveItem(selectObject) {
+            var itemValue = selectObject.value;
+            var rowIndex = selectObject.parentNode.parentNode.rowIndex;
+            $.ajax({
+                url: '/Home/SaveItem?itemValue=' + itemValue + '&rowIndex=' + rowIndex,
+                success: function (partialView) {
+                }
+            });
+        }
+
+        window.onbeforeunload = (function (e) {
+            var dialog = bootbox.dialog({
+                message: 'part1' + '<br />'
+                    + 'part2',
+                buttons: {
+                    ok: {
+                        label: "part3",
+                        className: 'btn-default',
+                        callback: function () {
+                        }
+                    },
+                    cancel: {
+                        label: "part4",
+                        className: 'btn-primary',
+                        callback: function () {
+                            return;
+                        }
+                    }
+                }
+            });
+        });
+
+        var myLabels = [];
+
+        @foreach (var d in Model.labels)
+        {
+            @:myLabels.push("@d");
+        }
+        var myData = [];
+
+        @foreach (var d in Model.data)
+        {
+            @:myData.push("@d");
+        }
+
+        var ctx = document.getElementById("myChart");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: myLabels,
+                datasets: [{
+                    data: myData,
+                    lineTension: 0,
+                    backgroundColor: 'transparent',
+                    borderColor: '#007bff',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false
+                        }
+                    }]
+                },
+                legend: {
+                    display: false,
+                }
+            }
+        });
+
+
+    </script>
+
+}

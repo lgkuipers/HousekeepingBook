@@ -1,0 +1,12 @@
+﻿@using HousekeepingBook.Models
+@using PagedList
+@using PagedList.Mvc
+
+@model HousekeepingBookModel
+
+<tr class="postrow">
+    <th scope="row">@Model.PartialItem.ItemName </ th >
+    <td>@Model.PartialItem.Total </ td >
+    <td>@Model.PartialItem.CategoryId </ td >
+    <td>@Html.DropDownListFor(x => x.PartialItem.CategoryId, this.Model.categorySelectList, new { style = "width:100px", onchange = "SaveItem(this)" })</td>
+</tr>
